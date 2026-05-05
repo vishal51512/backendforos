@@ -16,7 +16,7 @@ def home():
 @app.get("/chat")
 def chat(prompt: str):
     response = client.chat.completions.create(
-        model="llama3-70b-8192",
+        model="llama3-8b-8192"        # lightweight, fast ✅,
         messages=[{"role": "user", "content": prompt}]
     )
     return {"response": response.choices[0].message.content}
