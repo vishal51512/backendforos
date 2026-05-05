@@ -15,11 +15,14 @@ def home():
 # Chat endpoint
 @app.get("/chat")
 def chat(prompt: str):
-    response = client.chat.completions.create(
-        model="llama3-8b-8192"        # lightweight, fast ✅,
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return {"response": response.choices[0].message.content}
+    try:
+        response = client.chat.completions.create(
+            model="llama3-8b-8192",  # ✅ correct
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return {"response": response.choices[0].message.content}
+    except Exception as e:
+        return {"error": str(e)}
 
 # System stats
 @app.get("/system")
@@ -35,18 +38,18 @@ def analyze():
     cpu = psutil.cpu_percent()
     ram = psutil.virtual_memory().percent
 
-    prompt = f"""
-    CPU usage is {cpu}% and RAM usage is {ram}%.
-    Give short optimization advice.
-    """
+    prompt = f"CPU usage is {cpu}% and RAM usage is {ram}%. Give short optimization advice."
 
-    response = client.chat.completions.create(
-        model="llama3-70b-8192",
-        messages=[{"role": "user", "content": prompt}]
-    )
+    try:
+        response = client.chat.completions.create(
+            model="llama3-8b-8192",  # ✅ FIXED model
+            messages=[{"role": "user", "content": prompt}]
+        )
 
-    return {
-        "cpu": cpu,
-        "ram": ram,
-        "advice": response.choices[0].message.content
-    }
+        return {
+            "cpu": cpu,
+            "ram": ram,
+            "advice": response.choices[0].message.content
+        }
+    except Exception as e:
+        return {"error": str(e)}
