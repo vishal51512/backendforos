@@ -2,17 +2,18 @@ from fastapi import FastAPI
 from groq import Groq
 import os
 import psutil
+import re
 
 app = FastAPI()
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# Health check
+# ----------- Health check -----------
 @app.get("/")
 def home():
     return {"status": "NovaAI Backend Running"}
 
-# Chat endpoint
+# ----------- Chat -----------
 @app.get("/chat")
 def chat(prompt: str):
     try:
@@ -20,12 +21,20 @@ def chat(prompt: str):
             model="qwen/qwen3-32b",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.6,
-            max_completion_tokens=1024
+            max_completion_tokens=512
         )
-        return {"response": response.choices[0].message.content}
+
+        content = response.choices[0].message.content
+
+        # 🔥 Remove <think> blocks
+        content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
+
+        return {"response": content.strip()}
+
     except Exception as e:
         return {"error": str(e)}
-# System stats
+
+# ----------- System stats -----------
 @app.get("/system")
 def system():
     return {
@@ -33,7 +42,7 @@ def system():
         "ram": psutil.virtual_memory().percent
     }
 
-# AI optimization
+# ----------- AI Optimization -----------
 @app.get("/analyze")
 def analyze():
     cpu = psutil.cpu_percent()
@@ -43,14 +52,20 @@ def analyze():
 
     try:
         response = client.chat.completions.create(
-            model="llama3-8b-8192",  # ✅ FIXED model
-            messages=[{"role": "user", "content": prompt}]
+            model="qwen/qwen3-32b",   # ✅ fixed model
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.5,
+            max_completion_tokens=256
         )
+
+        content = response.choices[0].message.content
+        content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
 
         return {
             "cpu": cpu,
             "ram": ram,
-            "advice": response.choices[0].message.content
+            "advice": content.strip()
         }
+
     except Exception as e:
         return {"error": str(e)}
