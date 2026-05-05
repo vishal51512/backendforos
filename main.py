@@ -17,13 +17,14 @@ def home():
 def chat(prompt: str):
     try:
         response = client.chat.completions.create(
-            model="llama3-8b-8192",  # ✅ correct
-            messages=[{"role": "user", "content": prompt}]
+            model="qwen/qwen3-32b",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.6,
+            max_completion_tokens=1024
         )
         return {"response": response.choices[0].message.content}
     except Exception as e:
         return {"error": str(e)}
-
 # System stats
 @app.get("/system")
 def system():
